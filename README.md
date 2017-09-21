@@ -3,6 +3,14 @@ Cambridge Hackathon 2017
 
 # Hackathon Plan / Objectives
 
+1. Re-writing existing perl QC program `rRNA_MT_count` in python.
+
+2. Developing `fastq_check` QC program to detect read problems within fastq files due to failed bcl to fastq conversion.
+
+3. Developing `ParticleStats_V2` with updated and additional features.
+
+
+
 
 # Developers
 
