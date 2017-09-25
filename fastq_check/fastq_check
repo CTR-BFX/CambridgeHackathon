@@ -1,0 +1,76 @@
+#!/usr/bin/perl
+#--------------------------------------------------------------------------------------------------
+# fastq_check
+# Performs basic checks on the intergrity of the fastq file
+# 1. Searches for duplicate read names
+# 2. Checks the sequence and quality string are the same length
+#
+# Russell S. Hamilton (rsh46@cam.ac.uk)
+# Copyright 2017
+# License GPLv3
+#--------------------------------------------------------------------------------------------------
+use strict;
+
+my $FQFile = $ARGV[0];
+
+my $linecnt = 0;
+my $entry   = 0;
+my $Slen = 0;
+my $Qlen = 0;
+my %HeaderCheck;
+my %HeaderLineCheck;
+my $DupCount = 0;
+my $Progress = 0;
+my $BailOnFirstError = 1; 
+
+open(FQ,"gunzip -c $FQFile |") || die "Can't open $FQFile for reading: $!\n";
+while(<FQ>)
+  {
+    chomp;
+    # Header
+    if($linecnt % 4 == 0)
+      { 
+        if($Slen != $Qlen)
+          { 
+            print "Error seq length $Slen != quality str length $Qlen \n"; 
+            print "Exiting after first error found\n" if $BailOnFirstError;
+            exit if $BailOnFirstError;
+          }
+
+        $HeaderCheck{$_}++; 
+        $HeaderLineCheck{$_} .= $linecnt . "_";
+
+        if($HeaderCheck{$_} > 1)
+          { 
+            $HeaderLineCheck{$_} =~ s/_$//;
+            $HeaderLineCheck{$_} =~ s/_/ and /;
+            print "Error $_ repeated $HeaderCheck{$_} [line#=$linecnt read#=$entry] Dups found at lines $HeaderLineCheck{$_}\n";
+            print "Exiting after first error found\n" if $BailOnFirstError;
+            exit if $BailOnFirstError;
+            $DupCount++;
+           }
+
+        if($Progress & ($entry % 250000 == 0)){ print "Progress $entry\n"; }
+
+        $entry++;
+      }
+
+    # Sequence
+    if($linecnt % 4 == 1){ $Slen = length($_); }
+
+    # Quality
+    if($linecnt % 4 == 3){ $Qlen = length($_); }
+
+    $linecnt++;
+  }
+
+
+print "Duplicate Count = $DupCount\n";
+
+print "#", "-"x99, "\n";
+print "# End of $0\n";
+print "#", "-"x99, "\n"
+
+#--------------------------------------------------------------------------------------------------
+# END
+#--------------------------------------------------------------------------------------------------
