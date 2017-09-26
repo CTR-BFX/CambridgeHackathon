@@ -24,8 +24,11 @@
 
 #import Biopython as Bio
 import os,sys
-import numpy #as na
+import numpy as np
 from Bio import SeqIO
+import pandas as pd 
+import matplotlib.pyplot as plt
+from beeswarm import *
 
 
 # define variables:
@@ -33,39 +36,73 @@ DupCount = 0
 Progress = 0
 BailOnFirstError = 1
 FileName = "small.fastq"
-record_id_count = {}
+record_id_count = {}  # create empty dict
+AllRecords_List = []  # create empty list
+ii_list = []
 
-
-#try:
-with open(FileName, "rU") as handle:
-    for record in SeqIO.parse(handle, "fastq-illumina"):
+try:
+    with open(FileName, "rU") as handle:
+        for record in SeqIO.parse(handle, "fastq-illumina"):
+            AllRecords_List.append(record.id)
         #print(record.id)
             # Initialize an empty dictionary: record_id_count
-        if record.id in record_id_count.keys():
+            if record.id in record_id_count.keys():
                 record_id_count[record.id] += 1
-        else:
+            else:
                 record_id_count[record.id] = 1
 
     #print(record_id_count)
+    #print(AllRecords_List)
 
-        # Make a dictionary of all entries with a duplicate
-    DupCount = {k:v for (k,v) in record_id_count.items() if v > 1}
-    print(DupCount)
-    #for key, value in record_id_count.items():
-    #    if 1 < value:
-    #        print key
+# Make a dictionary of all entries with a duplicate:
+        DupCount = {k:v for (k,v) in record_id_count.items() if v > 1}
+        #print("\nDuplicated records:")
+        #print(DupCount)
 
-    y = DupCount.keys()
-    print(y)
-    x = record_id_count.keys()
-    print(x)
+# Get indexes of entries with duplicates:
+        y = DupCount.keys()
     
-    print(x.index(y))
-    
+        values = np.array(AllRecords_List)
+        searchvalues = y
 
-#except:
-#    print "\nError->\tFile: %s does not exist\n" % FileName
-#    sys.exit()
+        for searchval in searchvalues:
+            ii = np.where(values == searchval)[0]
+            ii_list.append(ii)
+    #print("\nIndexes for each dup record (ii_list):")
+    #print(ii_list)
+        id_list = map(str, ii_list)
+
+        Flat_list = [item for sublist in ii_list for item in sublist]
+        Matching_records = [AllRecords_List[i] for i in Flat_list]
+
+        df = pd.DataFrame({'Index' : Flat_list, 'Record_id' : Matching_records }, columns=['Index','Record_id']) 
+
+        df_sorted = df.sort_values(by='Index')
+    #print("\nTable with duplicated records:")
+    #print(df_sorted)
+ 
+        df_sorted.to_csv("Duplicated_records.csv", index = False, header = True)
+
+
+#   https://matplotlib.org/users/pyplot_tutorial.html
+#   https://github.com/mgymrek/pybeeswarm
+
+    #print(list(df_sorted.columns.values))
+
+# Plot duplicated records
+ 
+        named_ii_list = dict(zip(DupCount, ii_list))
+        #print(ii_list)
+ 
+        bs, ax = beeswarm(ii_list, method="swarm", labels=DupCount)
+        #plt.show(bs)
+        plt.savefig("Beeswarm_plot_duplicates.png")
+  
+
+
+except:
+    print "\nError->\tFile: %s does not exist\n" % FileName
+    sys.exit()
 
 
 
