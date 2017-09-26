@@ -11,6 +11,7 @@
 # License GPLv3
 #--------------------------------------------------------------------------------------------------
 
+# Python version used: Python 2.7.12 :: Anaconda 4.2.0 (x86_64)
 
 
 #  Subsample fastq files:
@@ -24,6 +25,8 @@
 #import Biopython as Bio
 import os,sys
 import numpy #as na
+from Bio import SeqIO
+
 
 # define variables:
 DupCount = 0
@@ -32,32 +35,37 @@ BailOnFirstError = 1
 FileName = "small.fastq"
 record_id_count = {}
 
-from Bio import SeqIO
 
-try:
-    with open(FileName, "rU") as handle:
-        for record in SeqIO.parse(handle, "fastq-illumina"):
-            print(record.id)
-            #print(record)
+#try:
+with open(FileName, "rU") as handle:
+    for record in SeqIO.parse(handle, "fastq-illumina"):
+        #print(record.id)
             # Initialize an empty dictionary: record_id_count
-            if record.id in record_id_count.keys():
-                record_id_count += 1
-            else:
+        if record.id in record_id_count.keys():
+                record_id_count[record.id] += 1
+        else:
                 record_id_count[record.id] = 1
-            print(record_id_count)
 
-        print(record_id_count)
+    #print(record_id_count)
 
         # Make a dictionary of all entries with a duplicate
-        print "Hello"
+    DupCount = {k:v for (k,v) in record_id_count.items() if v > 1}
+    print(DupCount)
+    #for key, value in record_id_count.items():
+    #    if 1 < value:
+    #        print key
 
-        DupCount = { key:value for key, value in record_id_count() if value > 1 }
-        print(DupCount)
+    y = DupCount.keys()
+    print(y)
+    x = record_id_count.keys()
+    print(x)
+    
+    print(x.index(y))
+    
 
-
-except:
-    print "\nError->\tFile: %s does not exist\n" % FileName
-    sys.exit()
+#except:
+#    print "\nError->\tFile: %s does not exist\n" % FileName
+#    sys.exit()
 
 
 
