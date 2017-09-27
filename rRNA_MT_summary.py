@@ -79,6 +79,7 @@ os.path.walk(topdir, step, exten)
 rRNA_reads = []
 MT_reads = []
 sample = []
+total = []
 
 for file in files:
     print "File processed: ", file,  "\n";
@@ -93,34 +94,41 @@ for file in files:
 for file in files:
     with open(file, "rU") as handle:
         for line in handle:
-            line.rstrip()
+            line = line.rstrip()
             if 'HT-SEQ file name: ' in line:
                 values = line.split(" ")
                 name = values[3]
                 name = re.sub(pattern, '', name) 
                 name = re.sub(".txt", '', name) 
+                name = re.sub("\t", '', name)
                 sample.append(name)
                 #print(name)
-            if 'No. of rRNA identifiers' in line:
+            if 'Percent rRNA mapped reads' in line:
                 values = line.split(" ")
                 #print(values[4])
                 rRNA_reads.append(values[4])
-            if 'No. of MT identifiers' in line:
+                total.append(values[6])
+            if 'Percent MT mapped reads' in line:
                 values = line.split(" ")
                 #print(values[4])
                 MT_reads.append(values[4])                
         
 handle.close()  
 
-print(rRNA_reads, MT_reads)
+#print(rRNA_reads, MT_reads, total)
 
 
 
-df = pd.DataFrame({'Sample' : sample, 'MT' : MT_reads, 'rRNA' : rRNA_reads }, columns=['Sample','MT', 'rRNA']) 
+df = pd.DataFrame({'Sample' : sample, 'MT' : MT_reads, 'rRNA' : rRNA_reads, 'Total_reads' : total }, columns=['Sample','MT', 'rRNA', 'Total_reads']) 
 
 
-file = "rRNA_mtRNA.summary.txt"
 
+#
+# wiritng the output files:
+#              
+out = "rRNA_mtRNA.summary.csv" 
+print "Summary output file:     ", out, "\n"
+df.to_csv(out, index = False, header = True)
 
 
 
